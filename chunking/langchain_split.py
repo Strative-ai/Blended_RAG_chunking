@@ -126,7 +126,6 @@ def parse_and_split_html(html_content, chunk_size=100):
     soup = BeautifulSoup(html_content.replace('<\/','</'), 'html.parser')
     texts = soup.get_text(separator='\n######\n')
     
-    # print(len(texts.split('\n######\n')))
     # Split text into chunks
     words = texts.split('\n######\n')
     # chunks = [' '.join(words[i:i+chunk_size]) for i in range(0, len(words), chunk_size)]
@@ -142,8 +141,21 @@ def parse_and_split_html(html_content, chunk_size=100):
     #             previous_word_append_flag = False
     #         if previous_word_append_flag != True:
     #             chunks.append(chunk)
-
     return chunks
+
+def html_split_knowledge_graph(html_content, chunk_size=100):
+    soup = BeautifulSoup(html_content.replace('<\/','</'), 'html.parser')
+
+    headers = {}
+    for level in range(1, 7):
+        header_tag = f'h{level}'
+        headers[header_tag] = [header.get_text(strip=True) for header in soup.find_all(header_tag)]
+
+    # Print the headers
+    for level, texts in headers.items():
+        print(f"{level.upper()}:")
+        for text in texts:
+            print(f"  {text}")
 
 def simpleCharacterTextSplitter(text_processed):
     character_splitter = CharacterTextSplitter(
