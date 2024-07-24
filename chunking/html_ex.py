@@ -1,6 +1,12 @@
 from bs4 import BeautifulSoup
 # from llamaindex import SimpleIndexer
 import numpy as np
+import re
+
+class Graph_Node():
+    name = ""
+    children = []
+    value = ""
 
 # Function to parse HTML and split into chunks
 def parse_and_split_html(html_content, chunk_size=100):
@@ -25,6 +31,15 @@ def parse_and_split_html(html_content, chunk_size=100):
     #             chunks.append(chunk)
 
     return chunks
+
+def build_graph(headers_content):
+    root = Graph_Node()
+    for header in headers_content:
+        graph = header.split(" ") 
+        header_level = graph[0].split('.')
+
+
+
 
 def html_split_knowledge_graph(html_content, chunk_size=100):
     soup = BeautifulSoup(html_content.replace('<\/','</'), 'html.parser')
@@ -52,8 +67,25 @@ def html_split_knowledge_graph(html_content, chunk_size=100):
     kg_chunks = {}
     para_chunks = []
     header_name = ""
-    # print(chunks[:50])
+    print(chunks[:100])
     print(headers)
+
+    headers_content = []
+    regex_pattern = r'(^\d+\.\d+\s+\w+)|(^\d+\s+\w+)'
+    flag = 0
+    for chunk in chunks:
+        if chunk == "Contents":
+            flag = 1
+        match = re.search(regex_pattern, chunk)
+        if match and flag:
+            print(f"Match found in: '{chunk}'")
+            headers_content.append(chunk)
+            # if graph[1] == headers[][header_level[1]]:
+
+
+    print(headers_content)
+    print(haders_content)
+
     for chunk in chunks:
         # print(headers_arr[h])
         if chunk ==  headers_arr[h]:
@@ -73,8 +105,8 @@ def html_split_knowledge_graph(html_content, chunk_size=100):
                 if len(para_chunks) != 0:
                     kg_chunks[header_name] = para_chunks
                 break
-    print(kg_chunks)
-    print(paragraphs[-1])
+    # print(kg_chunks)
+    # print(paragraphs[-1])
     # print(headers_arr)
      
 # Example HTML content
