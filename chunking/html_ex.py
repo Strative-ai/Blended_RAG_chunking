@@ -3,10 +3,50 @@ from bs4 import BeautifulSoup
 import numpy as np
 import re
 
-class Graph_Node():
-    name = ""
-    children = []
-    value = ""
+class GraphNode:
+    def __init__(self, name="", children=None, value=""):
+        self.name = name
+        self.children = children if children is not None else []
+        self.value = value
+
+    def add_child(self, child_node):
+        self.children.append(child_node)
+
+    def __repr__(self):
+        return f"GraphNode(name={self.name}, children={self.children}, value={self.value})"
+
+def build_graph_2(headers_content, headers):
+    root = GraphNode()
+    if 'h1' in headers and headers['h1']:
+        root.name = headers['h1'][0]
+    root.header_level = 1
+
+    node_dict = {1: root}
+
+    for header in headers_content:
+        graph = header.split(" ")
+        header_level = list(map(int, graph[0].split('.')))
+        header_name = " ".join(graph[1:])
+        
+        parent_level = header_level[:-1]
+        current_level = header_level[-1]
+        
+        if parent_level:
+            parent = node_dict[len(parent_level)]
+            new_node = GraphNode(name=header_name)
+            parent.add_child(new_node)
+            node_dict[len(header_level)] = new_node
+        else:
+            root.add_child(GraphNode(name=header_name))
+
+    return root
+
+def print_graph(root: GraphNode):
+    node_queue = [root]
+    while node_queue:
+        node = node_queue.pop(0)
+        print(f"{node.name} {len(node.children)}")
+        node_queue.extend(node.children)
 
 # Function to parse HTML and split into chunks
 def parse_and_split_html(html_content, chunk_size=100):
@@ -32,14 +72,32 @@ def parse_and_split_html(html_content, chunk_size=100):
 
     return chunks
 
-def build_graph(headers_content):
-    root = Graph_Node()
+
+def build_graph(headers_content,headers):
+    root = GraphNode()
+    print(headers)
+    root.name = headers['h1'][0]
+    root.header_level = 1
+    
     for header in headers_content:
+        parent = root
+
         graph = header.split(" ") 
         header_level = graph[0].split('.')
+        if len(header_level)==1:
+            parent = root
+            parent.children.append(GraphNode(name=" ".join(graph[1:])))
+            print(" ".join(graph[1:]))
+        else:
+            i = 0
+            while len(header_level) > i+1:
+                parent=parent.children[int(header_level[i])-1]
+                # print(f"parent name: {parent.children}")
+                i += 1
 
+            parent.children.append(GraphNode(name=" ".join(graph[1:])))
 
-
+    return root
 
 def html_split_knowledge_graph(html_content, chunk_size=100):
     soup = BeautifulSoup(html_content.replace('<\/','</'), 'html.parser')
@@ -84,6 +142,8 @@ def html_split_knowledge_graph(html_content, chunk_size=100):
 
 
     print(headers_content)
+    root = build_graph(headers_content=headers_content, headers=headers)
+    print_graph(root)
     print(haders_content)
 
     for chunk in chunks:
